@@ -195,8 +195,14 @@ memory.db
 6_mcp/accounts.db
 6_mcp/memory/*.db
 
-# ignore prompts for now
 
+# ignore prompts for now
 /2_openai/deep_research/completed-tasks/
 /2_openai/deep_research/execution-prompt.md
 /2_openai/deep_research/prompt.md
+
+/completed-tasks/
+/3_crew/execution-prompt.md
+/3_crew/prompt.md
+/3_crew/requirement-draft.md
+/3_crew/completed-tasks/
