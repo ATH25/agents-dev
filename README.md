@@ -1,6 +1,5 @@
 # agents-dev
 
-Development project based on the [AI Agents curriculum](../agents).
 
 ## Setup
 
