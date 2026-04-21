@@ -17,13 +17,17 @@ def run():
     """
     Run the crew.
     """
+    motion = "There needs to be strict laws to regulate LLMs"
+    if len(sys.argv) > 1:
+        motion = sys.argv[1]
+
     inputs = {
-        'topic': 'AI LLMs',
+        'motion': motion,
         'current_year': str(datetime.now().year)
     }
 
     try:
-        Debate().crew().kickoff(inputs=inputs)
+         Debate().crew().kickoff(inputs=inputs)
     except Exception as e:
         raise Exception(f"An error occurred while running the crew: {e}")
 
@@ -33,7 +37,7 @@ def train():
     Train the crew for a given number of iterations.
     """
     inputs = {
-        "topic": "AI LLMs",
+        "motion": "There needs to be strict laws to regulate LLMs",
         'current_year': str(datetime.now().year)
     }
     try:
@@ -57,7 +61,7 @@ def test():
     Test the crew execution and returns the results.
     """
     inputs = {
-        "topic": "AI LLMs",
+        "motion": "There needs to be strict laws to regulate LLMs",
         "current_year": str(datetime.now().year)
     }
 
@@ -83,7 +87,7 @@ def run_with_trigger():
 
     inputs = {
         "crewai_trigger_payload": trigger_payload,
-        "topic": "",
+        "motion": "",
         "current_year": ""
     }
 
@@ -92,3 +96,23 @@ def run_with_trigger():
         return result
     except Exception as e:
         raise Exception(f"An error occurred while running the crew with trigger: {e}")
+
+
+# CLI entry-point dispatch
+if __name__ == "__main__":
+    if len(sys.argv) < 2:
+        run()
+    elif sys.argv[1] == "run":
+        run()
+    elif sys.argv[1] == "train":
+        if len(sys.argv) < 4:
+            raise Exception("Usage: python -m debate.main train <iterations> <filename>")
+        # shift arguments for train()
+        sys.argv = [sys.argv[0], sys.argv[2], sys.argv[3]]
+        train()
+    elif sys.argv[1] == "replay":
+        replay()
+    elif sys.argv[1] == "test":
+        test()
+    else:
+        run()

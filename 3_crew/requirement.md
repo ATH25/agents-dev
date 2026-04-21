@@ -9,7 +9,7 @@ The intent of the code is to demonstrate a multi-agent workflow where different 
 ## Functional Requirements
 - **Input**: The system requires a `motion` string as input (e.g., "There needs to be strict laws to regulate LLMs").
 - **Multi-Agent Simulation**:
-    - **Debater Agent**: Responsible for generating both the "Propose" and "Oppose" arguments.
+    - **Debater Agent**: A single agent instance that generates both the “Propose” and “Oppose” arguments by switching context based on the task.
     - **Judge Agent**: Responsible for evaluating the arguments and deciding on a winner.
 - **Workflow Steps**:
     1. **Propose**: Generate a compelling argument in favor of the motion.
@@ -25,7 +25,7 @@ The intent of the code is to demonstrate a multi-agent workflow where different 
 - **Framework**: `crewAI` (specifically version `>=0.108.0`).
 - **LLM Requirements**:
     - **Debater**: `openai/gpt-4o-mini` (optimized for fast, concise arguments).
-    - **Judge**: `anthropic/claude-3-7-sonnet-latest` (optimized for reasoning and fair evaluation).
+    - **Judge**: `openai/gpt-4o` (optimized for reasoning and fair evaluation).
 - **Project Structure**:
     - `src/debate/main.py`: Entry point for running the crew.
     - `src/debate/crew.py`: Definition of agents, tasks, and the crew's logic.

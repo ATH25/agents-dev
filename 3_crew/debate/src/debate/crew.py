@@ -1,9 +1,7 @@
-from crewai import Agent, Crew, Process, Task
-from crewai.project import CrewBase, agent, crew, task
+import os
+from crewai import Agent, Crew, Process, Task, LLM
+from crewai.project import CrewBase, agent, crew, task, before_kickoff
 from crewai.agents.agent_builder.base_agent import BaseAgent
-# If you want to run a snippet of code before or after the crew starts,
-# you can use the @before_kickoff and @after_kickoff decorators
-# https://docs.crewai.com/concepts/crews#example-crew-class-with-decorators
 
 @CrewBase
 class Debate():
@@ -12,52 +10,56 @@ class Debate():
     agents: list[BaseAgent]
     tasks: list[Task]
 
-    # Learn more about YAML configuration files here:
-    # Agents: https://docs.crewai.com/concepts/agents#yaml-configuration-recommended
-    # Tasks: https://docs.crewai.com/concepts/tasks#yaml-configuration-recommended
-    
-    # If you would like to add tools to your agents, you can learn more about it here:
-    # https://docs.crewai.com/concepts/agents#agent-tools
+    @before_kickoff
+    def ensure_output_directory(self, inputs):
+        """Ensure the output directory exists."""
+        if not os.path.exists('output'):
+            os.makedirs('output')
+        return inputs
+
     @agent
-    def researcher(self) -> Agent:
+    def debater(self) -> Agent:
         return Agent(
-            config=self.agents_config['researcher'], # type: ignore[index]
+            config=self.agents_config['debater'], # type: ignore[index]
+            llm=LLM(model="openai/gpt-4o-mini"),
             verbose=True
         )
 
     @agent
-    def reporting_analyst(self) -> Agent:
+    def judge(self) -> Agent:
         return Agent(
-            config=self.agents_config['reporting_analyst'], # type: ignore[index]
+            config=self.agents_config['judge'], # type: ignore[index]
+            llm=LLM(model="openai/gpt-4o"),
             verbose=True
         )
 
-    # To learn more about structured task outputs,
-    # task dependencies, and task callbacks, check out the documentation:
-    # https://docs.crewai.com/concepts/tasks#overview-of-a-task
     @task
-    def research_task(self) -> Task:
+    def propose_task(self) -> Task:
         return Task(
-            config=self.tasks_config['research_task'], # type: ignore[index]
+            config=self.tasks_config['propose_task'], # type: ignore[index]
+            output_file='output/propose.md'
         )
 
     @task
-    def reporting_task(self) -> Task:
+    def oppose_task(self) -> Task:
         return Task(
-            config=self.tasks_config['reporting_task'], # type: ignore[index]
-            output_file='report.md'
+            config=self.tasks_config['oppose_task'], # type: ignore[index]
+            output_file='output/oppose.md'
+        )
+
+    @task
+    def decide_task(self) -> Task:
+        return Task(
+            config=self.tasks_config['decide_task'], # type: ignore[index]
+            output_file='output/decide.md'
         )
 
     @crew
     def crew(self) -> Crew:
         """Creates the Debate crew"""
-        # To learn how to add knowledge sources to your crew, check out the documentation:
-        # https://docs.crewai.com/concepts/knowledge#what-is-knowledge
-
         return Crew(
-            agents=self.agents, # Automatically created by the @agent decorator
-            tasks=self.tasks, # Automatically created by the @task decorator
+            agents=self.agents,
+            tasks=self.tasks,
             process=Process.sequential,
             verbose=True,
-            # process=Process.hierarchical, # In case you wanna use that instead https://docs.crewai.com/how-to/Hierarchical/
         )
