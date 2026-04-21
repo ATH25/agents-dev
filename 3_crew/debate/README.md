@@ -1,73 +1,82 @@
 # Debate Crew
 
-Welcome to the Debate Crew project, powered by [crewAI](https://crewai.com). This template is designed to help you set up a multi-agent AI system with ease, leveraging the powerful and flexible framework provided by crewAI. Our goal is to enable your agents to collaborate effectively on complex tasks, maximizing their collective intelligence and capabilities.
+Welcome to the Debate Crew project, powered by [crewAI](https://crewai.com). This multi-agent AI system simulates a structured debate on a given motion, featuring automated generation of opposing arguments followed by a reasoned judgment.
+
+## Project Structure
+
+```text
+3_crew/debate/
+├── knowledge/
+│   └── user_preference.txt   # Stores preferences for the debate simulation.
+├── output/                    # Generated markdown files for each debate stage.
+│   ├── propose.md            # Argument in favor of the motion.
+│   ├── oppose.md             # Argument against the motion.
+│   └── decide.md             # Final judgment and winner declaration.
+├── src/debate/
+│   ├── config/
+│   │   ├── agents.yaml      # Definitions for Debater and Judge agents.
+│   │   └── tasks.yaml       # Definitions for Propose, Oppose, and Decide tasks.
+│   ├── tools/
+│   │   └── custom_tool.py    # Placeholder for specialized debate tools.
+│   ├── crew.py              # Main crew logic linking agents and tasks.
+│   └── main.py              # Entry point for executing the simulation.
+├── pyproject.toml             # Project metadata and dependencies (CrewAI, UV).
+└── README.md                  # Project documentation.
+```
+
+## Progress & Accomplishments
+
+We have successfully built a functional debate simulation with the following milestones:
+- **Environment Setup:** Configured a CrewAI-ready environment using `uv` for dependency management.
+- **Agent Configuration:** Defined two specialized agents:
+  - `debater`: Optimized for generating compelling arguments (uses `gpt-4o-mini`).
+  - `judge`: Optimized for complex reasoning and evaluation (uses `gpt-4o`).
+- **Task Implementation:** Created a sequential workflow where:
+  1. A motion is proposed.
+  2. The same motion is opposed.
+  3. A judge evaluates both arguments to declare a winner.
+- **Output Management:** Integrated file-saving logic to automatically store debate results in the `output/` directory as markdown documents.
+- **Execution:** Verified the system with a sample motion: *"There needs to be strict laws to regulate LLMs"*.
 
 ## Installation
 
-Ensure you have Python >=3.10 <3.14 installed on your system.
-
-This project uses [UV](https://docs.astral.sh/uv/) for dependency management and package handling.
+Ensure you have Python >=3.10 <3.13 installed.
 
 ### 1. Install uv
-
 ```bash
 pip install uv
 ```
 
-### 2. Install CrewAI CLI
-
-Install the CrewAI command-line interface:
-
-```bash
-uv tool install crewai
-```
-
-Verify installation:
-
-```bash
-uv tool list
-```
-
-You should see `crewai` listed.
-
-### 3. Install Project Dependencies
-
-Navigate to your project directory and install dependencies:
-
+### 2. Install Project Dependencies
 ```bash
 crewai install
 ```
-### Customizing
 
-**Add your `OPENAI_API_KEY` into the `.env` file**
-
-- Modify `src/debate/config/agents.yaml` to define your agents
-- Modify `src/debate/config/tasks.yaml` to define your tasks
-- Modify `src/debate/crew.py` to add your own logic, tools and specific args
-- Modify `src/debate/main.py` to add custom inputs for your agents and tasks
+### Run
+crewai create crew debate
 
 ## Running the Project
 
-To kickstart your crew of AI agents and begin task execution, run this from the root folder of your project:
+To start the debate simulation, run:
 
 ```bash
-$ crewai run
+crewai run
+```
+or
+```bash
+uv run run_crew
 ```
 
-This command initializes the debate Crew, assembling the agents and assigning them tasks as defined in your configuration.
+The simulation will execute the debate based on the motion defined in `src/debate/main.py` and save the results to the `output/` folder.
 
-This example, unmodified, will run the create a `report.md` file with the output of a research on LLMs in the root folder.
+## Customizing
 
-## Understanding Your Crew
-
-The debate Crew is composed of multiple AI agents, each with unique roles, goals, and tools. These agents collaborate on a series of tasks, defined in `config/tasks.yaml`, leveraging their collective skills to achieve complex objectives. The `config/agents.yaml` file outlines the capabilities and configurations of each agent in your crew.
+- **Motion:** Modify the `inputs` dictionary in `src/debate/main.py` to change the debate topic.
+- **Agents:** Adjust roles or models in `src/debate/config/agents.yaml`.
+- **Tasks:** Refine task descriptions or expected outputs in `src/debate/config/tasks.yaml`.
+- **Logic:** Update `src/debate/crew.py` to add new agents, tasks, or custom tools.
 
 ## Support
 
-For support, questions, or feedback regarding the Debate Crew or crewAI.
-- Visit our [documentation](https://docs.crewai.com)
-- Reach out to us through our [GitHub repository](https://github.com/joaomdmoura/crewai)
-- [Join our Discord](https://discord.com/invite/X4JWnZnxPb)
-- [Chat with our docs](https://chatg.pt/DWjSBZn)
-
-Let's create wonders together with the power and simplicity of crewAI.
+- [CrewAI Documentation](https://docs.crewai.com)
+- [GitHub Repository](https://github.com/joaomdmoura/crewai)
