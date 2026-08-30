@@ -1,0 +1,35 @@
+research_task:
+  description: >
+    Conduct thorough financial research on {company} as of {current_year}.
+    Cover the following areas:
+    - Company overview: business model, revenue streams, and key products/services
+    - Recent financial performance: revenue, earnings, margins, and guidance
+    - Competitive landscape: identify the top 3-5 competitors and compare key metrics
+    - Recent strategic developments: M&A activity, partnerships, product launches, or leadership changes
+    - Market trends and macro factors affecting the company and its sector
+    - Analyst sentiment and any notable upgrades, downgrades, or price target changes
+  expected_output: >
+    A structured list of 10 bullet points covering the most relevant financial
+    and competitive insights about {company}, with each point concise and factual.
+  agent: researcher
+
+reporting_task:
+  description: >
+    Using the research findings, produce a comprehensive market analysis report on {company}.
+    Expand each research finding into a full, well-reasoned section. The report must include:
+    - An executive summary
+    - Company overview and business model
+    - Financial performance analysis
+    - Competitive analysis
+    - Strategic outlook and key risks
+    - Investment considerations or recommendations
+    Ensure the report is professional, detailed, and written for a financially literate audience.
+  expected_output: >
+    A fully fledged financial research report with clearly labeled sections,
+    each containing detailed analysis and supporting data points.
+    Formatted as markdown without '```'
+  agent: reporting_analyst
+  context:
+    - research_task
+  output_file: output/report.md
+
