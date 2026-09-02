@@ -501,3 +501,94 @@ Out of scope unless explicitly requested:
 - Autonomous recurring scheduling.
 
 The system recommends a researched candidate; it must never place a trade.
+
+## 19. Change Requests / Version Notes
+
+### v1.1 — Structured Pydantic Task Outputs
+
+The first two CrewAI tasks must use Pydantic structured outputs.
+
+Required Pydantic models (make file name changes as necessary):
+
+- `TrendingCompany`
+- `TrendingCompanyList`
+- `TrendingCompanyResearch`
+- `TrendingCompanyResearchList`
+
+`TrendingCompanyList` must contain a list of `TrendingCompany` objects.
+
+`TrendingCompanyResearchList` must contain a list of `TrendingCompanyResearch` objects.
+
+The CrewAI task methods must configure:
+
+- `find_trending_companies` with `output_pydantic=TrendingCompanyList`
+- `research_trending_companies` with `output_pydantic=TrendingCompanyResearchList`
+
+The generated JSON artifacts must remain valid JSON and reflect these structured outputs.
+
+`pick_best_company` may continue to produce the human-readable Markdown artifact `output/decision.md`; no Pydantic output model is required for that task unless a later change request explicitly adds one.
+
+
+### v1.2 — Pydantic Research Schema Completeness and Task Context Wiring
+
+The structured Pydantic models introduced in v1.1 must preserve the information required by the corresponding task requirements rather than narrowing or omitting required research content.
+
+`TrendingCompany` must support the information required by Section 7.1, including:
+
+- Company name.
+- Ticker symbol.
+- Why the company is currently trending.
+- Key recent catalysts.
+- Important source references or URLs when available.
+
+`TrendingCompanyList` must contain exactly 2 or 3 unique `TrendingCompany` objects.
+
+`TrendingCompanyResearch` must support the research required by Sections 6.2 and 7.2, including:
+
+- Company name and ticker.
+- Investment thesis.
+- Business model and major revenue drivers.
+- Competitive position.
+- Recent revenue and earnings performance.
+- Revenue and earnings growth trends.
+- Profitability and margins.
+- Cash flow and balance-sheet strength.
+- Debt and liquidity.
+- Recent earnings results and management guidance.
+- Valuation considerations.
+- Important recent news and catalysts.
+- Material risks and negative developments.
+- Analyst sentiment when useful and current.
+- Bull case.
+- Bear case.
+- Overall assessment.
+- Source references for significant current claims when available.
+
+`TrendingCompanyResearchList` must contain research for every valid company supplied by `find_trending_companies`.
+
+Task dependency/context wiring must use one CrewAI-supported mechanism and must not be duplicated between YAML configuration and Python task construction. Prefer the standard `context` configuration in `config/tasks.yaml` when supported by the installed CrewAI version. If that mechanism is used, do not also construct the same task dependencies through Python `context=[...]` arguments.
+
+The validation process must verify that fewer than two valid unique companies, empty research output, or malformed structured research prevents the workflow from producing a fabricated final recommendation. These conditions must be handled programmatically where necessary rather than relying solely on LLM behavioral instructions.
+
+
+### v1.3 — Fixed Three-Company Research Flow
+
+The stock-selection workflow must use exactly three candidate companies from discovery through research before selecting one final recommendation.
+
+`find_trending_companies` must return exactly 3 unique publicly traded companies in the requested sector. References elsewhere in this document to selecting or returning 2–3 companies must be interpreted as exactly 3 for this version.
+
+`TrendingCompanyList` must therefore contain exactly 3 unique `TrendingCompany` objects. Validation must reject outputs containing fewer or more than 3 companies, as well as duplicate ticker symbols.
+
+`research_trending_companies` must perform research on all 3 companies returned by `find_trending_companies`. The workflow must verify that the research output contains exactly one `TrendingCompanyResearch` entry for each of the 3 selected ticker symbols. Missing companies, duplicate researched tickers, or research for unrelated tickers must cause validation to fail before the final recommendation stage.
+
+`TrendingCompanyResearchList` must therefore contain exactly 3 unique research records whose ticker set matches the ticker set produced by `TrendingCompanyList`.
+
+`pick_best_company` must compare the completed research for all 3 candidate companies and select exactly 1 company as the final recommendation. The final recommendation must not be produced unless complete validated research exists for all 3 candidates.
+
+The intended deterministic flow is:
+
+- 3 unique companies discovered.
+- All 3 companies fully researched.
+- Exactly 1 company selected as the final recommendation.
+
+Update implementation planning, task definitions, validators, acceptance criteria, and error handling to follow this 3 → 3 → 1 flow.

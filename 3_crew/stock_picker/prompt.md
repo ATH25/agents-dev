@@ -24,7 +24,18 @@ Agents should read and follow the instructions in this file directly. The agent 
 ---------
 **Important note**: `requirement-draft.md` mentioned in this file is the `requirement-draft.md` file in the current working folder. If missing, use `requirement.md` and build files forward. Create `requirement.md`, `plan.md`, and `tasks.md` in the current working folder. 
 
+## Stock Picker
+### Stock Picker Implementation
 
+Implement the Stock Picker project by executing all tasks in @tasks.md from top to bottom.
+
+Use @requirement.md as the authoritative source of requirements and @plan.md as the implementation plan. If there is any conflict, requirement.md takes precedence.
+
+As you complete each task in tasks.md, check it off by changing [ ] to [x].
+
+Follow the validation steps in tasks.md and do not mark a task complete unless it has actually been implemented or verified.
+
+Do not modify requirement.md or plan.md unless a genuine implementation issue requires clarification. If you encounter a conflict, unsupported CrewAI behavior, or a requirement that cannot be implemented as written, stop and explain the issue before changing the design.
 
 
 

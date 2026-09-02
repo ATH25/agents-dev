@@ -1,17 +1,56 @@
-research_task:
+find_trending_companies:
   description: >
-    Conduct a thorough research about {topic}
-    Make sure you find any interesting and relevant information given
-    the current year is {current_year}.
+    Find exactly 3 distinct publicly traded companies currently trending within
+    {sector_name} as of {current_date}. Use recent company news, earnings
+    announcements and guidance, press releases, SEC filings or material
+    filing-related news, analyst upgrades/downgrades or estimate changes,
+    product/customer/partnership/strategic announcements, verifiable insider
+    transactions, significant stock-price or volume movement and its cause, and
+    sector-specific developments as signals. Do not return the same company
+    under different names or ticker representations. The output must be valid
+    JSON.
   expected_output: >
-    A list with 10 bullet points of the most relevant information about {topic}
-  agent: researcher
+    A structured list of exactly 3 unique companies. For every company provide:
+    company name, ticker symbol, why it is currently trending, key recent
+    catalysts, and important source references or URLs when available.
+  agent: trending_company_finder
+  output_file: output/trending_companies.json
 
-reporting_task:
+research_trending_companies:
   description: >
-    Review the context you got and expand each topic into a full section for a report.
-    Make sure the report is detailed and contains any and all relevant information.
+    Research all 3 companies identified by find_trending_companies. Do not
+    fabricate financial figures; if reliable data cannot be found, explicitly
+    state that instead of guessing. Distinguish factual findings from
+    analytical conclusions. For each company investigate, where reliable
+    information is available: company name and ticker, business model and
+    major revenue drivers, competitive position, recent revenue and earnings
+    performance, revenue and earnings growth trends, profitability and
+    margins, cash flow and balance-sheet strength, debt and liquidity, recent
+    earnings results and management guidance, valuation considerations,
+    important recent news and catalysts, material risks and negative
+    developments, analyst sentiment when useful and current, bull case, bear
+    case, and overall investment thesis. The output must be valid JSON.
   expected_output: >
-    A fully fledged report with the main topics, each with a full section of information.
-    Formatted as markdown without '```'
-  agent: reporting_analyst
+    A structured report containing research for exactly the 3 companies from
+    find_trending_companies, covering every item listed above, with source
+    references for significant current claims when available.
+  agent: financial_researcher
+  output_file: output/research_report.json
+
+pick_best_company:
+  description: >
+    Compare the completed research for all 3 candidate companies and select
+    exactly one as the strongest investment candidate. Base the decision on
+    financial health, growth trajectory, earnings quality, competitive
+    position, valuation, near- and medium-term catalysts, downside risks,
+    strength of available evidence, and overall risk/reward relative to the
+    other candidates — not simply the company with the strongest recent price
+    movement. After determining the winner, call the send_push_notification
+    tool with a 1-3 sentence message that includes the company name, ticker
+    symbol, and primary reason for selection.
+  expected_output: >
+    The selected company, its ticker, a concise investment thesis, the primary
+    reasons for selection, important catalysts, key risks, and why the company
+    ranks above the alternatives.
+  agent: stock_picker
+  output_file: output/decision.md
