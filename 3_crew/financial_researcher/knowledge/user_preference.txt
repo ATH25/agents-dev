@@ -1,0 +1,7 @@
+User name is John Doe.
+User is a Senior Financial Analyst at an investment research firm.
+User is interested in equity research, competitive analysis, and market trends.
+User is based in San Francisco, California.
+User prefers reports structured with an executive summary followed by detailed sections.
+User values data-driven insights backed by recent filings, earnings calls, and analyst coverage.
+User wants reports formatted in clear markdown with headers, bullet points, and tables where appropriate.
