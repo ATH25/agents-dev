@@ -6,7 +6,7 @@
         "hooks": [
           {
             "type": "command",
-            "command": "python3 .codex/hooks/check_command_safety.py"
+            "command": "python3 \"$(git rev-parse --show-toplevel)/.codex/hooks/check_command_safety.py\""
           }
         ]
       }

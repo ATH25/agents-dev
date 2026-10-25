@@ -32,14 +32,14 @@ When asked to build or continue this project, treat `requirement.md` as the sour
 
 ## Spec-driven workflow files
 
-This directory uses a draft → spec → plan → tasks pipeline, described in `prompt.md`:
+This directory uses a draft → spec → plan → tasks pipeline, described in `prompt-1.md`:
 
 1. `requirement-draft.md` — freeform draft requirements (source of truth if present).
 2. `requirement.md` — structured spec generated from the draft; detailed enough to implement without guessing (this is the current state).
 3. `plan.md` — step-by-step implementation plan generated from `requirement.md` (not yet created).
 4. `tasks.md` — checklist-format, execution-ready tasks generated from `plan.md`, using `- [ ]` / `- [X]` (not yet created). This is the *only* file that uses checklist items.
 
-Rules from `prompt.md`:
+Rules from `prompt-1.md`:
 - Only read/update these files from the current working folder (`3_crew/stock_picker/`), never from a `completed-tasks/` archive folder — that's reference-only and the user moves files there manually.
 - Information must flow forward (draft → requirement → plan → tasks) without being dropped or oversimplified; each downstream file must preserve implementation-relevant details (env var names, function/file names, API usage, defaults) from the file that generated it.
 

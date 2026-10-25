@@ -28,7 +28,7 @@ This module follows a strict **Requirement -> Plan -> Task** progression:
 
 ### Key Files
 - **`requirement.md`**: Structured specification for the current task.
-- **`prompt.md`**: Foundational instructions for agents to manage the workflow artifacts.
+- **`prompt-1.md`**: Foundational instructions for agents to manage the workflow artifacts.
 - **`debate/src/debate/crew.py`**: Implementation of the CrewAI logic, agents, and tasks.
 - **`debate/src/debate/config/`**: YAML configurations for `agents.yaml` and `tasks.yaml`.
 

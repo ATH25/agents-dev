@@ -8,7 +8,7 @@ This structured artifact-driven workflow is active **ONLY** when the relevant fi
 
 `requirement-draft.md` → `requirement.md` → `plan.md` → `tasks.md`
 
-### 1. Preparation & Generation (from `prompt.md`)
+### 1. Preparation & Generation (from `prompt-1.md`)
 - **Source of Truth**: 
     - Use `requirement-draft.md` as the primary source of truth if present.
     - If `requirement-draft.md` is missing but `requirement.md` exists, use `requirement.md` as the source of truth and proceed to generate the plan and tasks.

@@ -1,0 +1,9 @@
+coding_task:
+  description: >
+    To code a given task in Python. You use your sandbox tools to achieve this
+    assignment: {assignment}
+  expected_output: >
+    The code for the given task with a summary of what you did to achieve
+    this assignment.
+  agent: coder
+  output_file: output/code-task-output.md

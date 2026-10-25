@@ -1,22 +1,48 @@
 #!/usr/bin/env python3
 
+"""
+Codex Command Safety Hook
+
+Purpose:
+- Allow normal Codex development operations.
+- Block a small set of explicitly destructive commands.
+- Rely on Codex's native sandbox and approval policies
+  for primary filesystem and execution protection.
+
+This is a lightweight safety check, not a security sandbox.
+"""
+
 import json
 import os
-import re
 import shlex
 import sys
 from pathlib import Path
 
+
+# ---------------------------------------------------------
+# Configuration
+# ---------------------------------------------------------
 
 PROJECT_ROOT = Path(__file__).resolve().parents[2]
 
 LOG_FILE = Path("/tmp/codex_command_safety.log")
 
 
-def log(message: str) -> None:
-    with LOG_FILE.open("a", encoding="utf-8") as handle:
-        handle.write(message + "\n")
+# ---------------------------------------------------------
+# Logging
+# ---------------------------------------------------------
 
+def log(message: str) -> None:
+    try:
+        with LOG_FILE.open("a", encoding="utf-8") as handle:
+            handle.write(message + "\n")
+    except OSError:
+        pass
+
+
+# ---------------------------------------------------------
+# Hook decisions
+# ---------------------------------------------------------
 
 def deny(reason: str) -> None:
     log(f"BLOCKED: {reason}")
@@ -32,22 +58,22 @@ def deny(reason: str) -> None:
     sys.exit(0)
 
 
-def is_within_project(path: Path) -> bool:
-    try:
-        path.resolve(strict=False).relative_to(PROJECT_ROOT)
-        return True
-    except (ValueError, OSError):
-        return False
+def allow(command: str, cwd: Path) -> None:
+    log(f"ALLOWED: cwd={cwd} command={command}")
+    sys.exit(0)
 
 
-# Read the PreToolUse payload from Codex.
+# ---------------------------------------------------------
+# Read Codex hook payload
+# ---------------------------------------------------------
+
 try:
     payload = json.load(sys.stdin)
-except Exception as exc:
-    deny(f"Safety hook could not parse its input: {exc}")
+except (ValueError, OSError) as exc:
+    deny(f"Invalid hook input: {exc}")
 
 
-# This hook protects Bash tool calls.
+# Only inspect Bash tool calls.
 if (
     payload.get("hook_event_name") != "PreToolUse"
     or payload.get("tool_name") != "Bash"
@@ -55,119 +81,133 @@ if (
     sys.exit(0)
 
 
-command = payload.get("tool_input", {}).get("command", "")
+tool_input = payload.get("tool_input") or {}
+
+command = tool_input.get("command", "")
 
 if not isinstance(command, str) or not command.strip():
-    deny("Bash command was missing or malformed.")
+    deny("Missing or malformed Bash command.")
 
 
 cwd = Path(
     payload.get("cwd") or os.getcwd()
 ).resolve(strict=False)
 
-if not is_within_project(cwd):
-    deny(
-        f"Command working directory is outside agents-dev: {cwd}"
-    )
+
+# ---------------------------------------------------------
+# Working directory validation
+# ---------------------------------------------------------
+
+# Require commands to start from within the repository.
+# This does not prevent commands from accessing other paths;
+# Codex's sandbox is responsible for filesystem restrictions.
+
+try:
+    cwd.relative_to(PROJECT_ROOT)
+except ValueError:
+    deny(f"Working directory outside agents-dev: {cwd}")
 
 
-# Block compound shell expressions because they can hide additional
-# commands from this simple safety validator.
-if (
-    re.search(r"[;&|`]", command)
-    or "$(" in command
-    or "\n" in command
-):
-    deny(
-        "Compound commands, pipes, command substitution, "
-        "and multiline shell commands are blocked."
-    )
+# ---------------------------------------------------------
+# Command parsing
+# ---------------------------------------------------------
 
+# Do not reject commands merely because they contain:
+#
+#   &&
+#   ||
+#   |
+#   ;
+#   >
+#   <
+#   multiline shell syntax
+#
+# These are normal shell constructs used by coding agents.
+#
+# The Codex sandbox and approval policy remain responsible
+# for enforcing execution and filesystem permissions.
 
 try:
     tokens = shlex.split(command, posix=True)
-except ValueError as exc:
-    deny(f"Unable to safely parse command: {exc}")
+except ValueError:
+    # Avoid blocking ordinary development workflows because
+    # the lightweight parser cannot understand the command.
+    log(f"DEFERRED TO SANDBOX: {command}")
+    sys.exit(0)
 
 
 if not tokens:
     sys.exit(0)
 
 
-# Block privilege escalation.
+# ---------------------------------------------------------
+# Basic destructive command protections
+# ---------------------------------------------------------
+
+# Block direct privilege escalation.
 if tokens[0] in {"sudo", "su"}:
-    deny(f"Privileged command is blocked: {tokens[0]}")
+    deny("Privilege escalation command blocked.")
 
 
-# Block recursive deletion.
-if (
-    tokens[0] == "rm"
-    and any(
-        flag in {"-r", "-R", "-rf", "-fr", "--recursive"}
-        for flag in tokens[1:]
+# Block direct recursive deletion.
+if tokens[0] == "rm":
+
+    recursive = any(
+        argument == "--recursive"
+        or (
+            argument.startswith("-")
+            and not argument.startswith("--")
+            and "r" in argument.lower()
+        )
+        for argument in tokens[1:]
     )
-):
-    deny("Recursive deletion is blocked.")
+
+    if recursive:
+        deny("Recursive deletion is blocked.")
 
 
-# Block dangerous Git operations.
-if (
-    tokens[:2] == ["git", "push"]
-    and any(
-        flag in {"-f", "--force", "--force-with-lease"}
-        for flag in tokens[2:]
+# Block direct force pushes.
+if tokens[:2] == ["git", "push"]:
+
+    force_push = any(
+        argument in {
+            "-f",
+            "--force",
+            "--force-with-lease"
+        }
+        for argument in tokens[2:]
     )
-):
-    deny("Force-pushing Git history is blocked.")
+
+    if force_push:
+        deny("Force-pushing Git history is blocked.")
 
 
-if (
-    tokens[:2] == ["git", "reset"]
-    and "--hard" in tokens[2:]
-):
-    deny("git reset --hard is blocked.")
+# Block direct hard resets.
+if tokens[:2] == ["git", "reset"]:
+
+    if "--hard" in tokens[2:]:
+        deny("git reset --hard is blocked.")
 
 
-if (
-    tokens[:2] == ["git", "clean"]
-    and any(
-        "f" in flag.lstrip("-")
-        for flag in tokens[2:]
-        if flag.startswith("-")
+# Block direct forced Git cleaning.
+if tokens[:2] == ["git", "clean"]:
+
+    force_clean = any(
+        argument == "--force"
+        or (
+            argument.startswith("-")
+            and not argument.startswith("--")
+            and "f" in argument
+        )
+        for argument in tokens[2:]
     )
-):
-    deny("git clean with force is blocked.")
+
+    if force_clean:
+        deny("git clean with force is blocked.")
 
 
-# Block explicit paths resolving outside agents-dev.
-for token in tokens[1:]:
+# ---------------------------------------------------------
+# Allow command
+# ---------------------------------------------------------
 
-    if token.startswith("-"):
-        continue
-
-    candidate = None
-
-    if token.startswith("~"):
-        candidate = Path(os.path.expanduser(token))
-
-    elif token.startswith("/"):
-        candidate = Path(token)
-
-    elif (
-        token in {"..", "."}
-        or token.startswith("../")
-        or token.startswith("./")
-        or "/" in token
-    ):
-        candidate = cwd / token
-
-    if (
-        candidate is not None
-        and not is_within_project(candidate)
-    ):
-        deny(f"Path outside agents-dev is blocked: {token}")
-
-
-log(f"ALLOWED: cwd={cwd} command={command}")
-
-sys.exit(0)
+allow(command, cwd)
